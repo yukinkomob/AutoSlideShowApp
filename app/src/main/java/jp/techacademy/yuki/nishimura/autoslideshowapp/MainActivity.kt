@@ -11,6 +11,7 @@ import android.os.Handler
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -31,7 +32,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         checkPermissions()
-        initializeTimerCallback()
 
         next_button.setOnClickListener {
             if (!mIsPlayingSlideshow) {
@@ -44,8 +44,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         play_pause_button.setOnClickListener {
-            // TODO 再生ボタンをタップすると、ボタンの表示が「停止」になり、停止ボタンをタップするとボタンの表示が「再生」になるようにしてください
-            // TODO 停止ボタンをタップすると自動送りが止まり、進むボタンと戻るボタンをタップ可能にしてください
             if (!mIsPlayingSlideshow) {
                 playSlideshow()
             } else {
@@ -101,35 +99,6 @@ class MainActivity : AppCompatActivity() {
         play_pause_button.text = "再生"
     }
 
-    private fun initializeTimerCallback() {
-//        start_button.setOnClickListener {
-//            if (mTimer == null) {
-//                mTimer = Timer()
-//
-//                mTimer!!.schedule(object : TimerTask() {
-//                    override fun run() {
-//                        mTimerSec += 0.1
-//                        mHandler.post {
-//                            timer.text = String.format("%.1f", mTimerSec)
-//                        }
-//                    }
-//                }, 100, 100)
-//            }
-//        }
-//
-//        pause_button.setOnClickListener {
-//            if (mTimer != null) {
-//                mTimer!!.cancel()
-//                mTimer = null
-//            }
-//        }
-//
-//        reset_button.setOnClickListener {
-//            mTimerSec = 0.0
-//            timer.text = String.format("%.1f", mTimerSec)
-//        }
-    }
-
     private fun checkPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager
@@ -157,8 +126,20 @@ class MainActivity : AppCompatActivity() {
             PERMISSIONS_REQUEST_CODE ->
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getContentsInfo()
+                } else {
+                    finishAffinity()
+                    Toast.makeText(applicationContext, "アプリの利用に必要な許可が得られませんでした。", Toast.LENGTH_LONG)
+                        .show()
                 }
         }
+    }
+
+    private fun disableFunctions() {
+        next_button.isEnabled = false
+        back_button.isEnabled = false
+        play_pause_button.isEnabled = false
+        noImageText.visibility = View.VISIBLE
+        imageView.visibility = View.GONE
     }
 
     private fun getContentsInfo() {
@@ -187,11 +168,7 @@ class MainActivity : AppCompatActivity() {
         cursor.close()
 
         if (mMediaUriList.size == 0) {
-            next_button.isEnabled = false
-            back_button.isEnabled = false
-            play_pause_button.isEnabled = false
-            noImageText.visibility = View.VISIBLE
-            imageView.visibility = View.GONE
+            disableFunctions()
         } else {
             mImgIndex = 0
             imageView.setImageURI(mMediaUriList[mImgIndex])
